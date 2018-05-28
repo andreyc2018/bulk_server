@@ -295,15 +295,15 @@ class MockLibrary
                            const std::string&) {}
 };
 
-TEST(Preprocessor, ParseInput)
-{
-    MockLibrary lib;
-    async::handle_t h = reinterpret_cast<async::handle_t>(1);
-    Preprocessor<MockLibrary, async::details::CommonProcessor> p;
-    p.parse_input("1\n2\n3\n4", h, lib);
-    p.parse_input("1\n{\n2\n3\n}\n4", h, lib);
-    p.parse_input("1\n{\n2\n{\n\n3\n}\n4\n}\n5", h, lib);
-}
+//TEST(Preprocessor, ParseInput)
+//{
+//    MockLibrary lib;
+//    async::handle_t h = reinterpret_cast<async::handle_t>(1);
+//    Preprocessor<MockLibrary, async::details::CommonProcessor> p;
+//    p.parse_input("1\n2\n3\n4", h, lib);
+//    p.parse_input("1\n{\n2\n3\n}\n4", h, lib);
+//    p.parse_input("1\n{\n2\n{\n\n3\n}\n4\n}\n5", h, lib);
+//}
 
 TEST(Async, NextHandle)
 {
@@ -335,4 +335,91 @@ TEST(PreProc, ParseInput)
               << " before = " << input.substr(0, start_pos-1)
               << " substr = " << input.substr(start_pos, end_pos-start_pos+1)
               << "\n";
+}
+
+namespace async {
+namespace details {
+extern async::details::AsyncLibrary* g_library;
+void set_library(async::details::AsyncLibrary* library);
+void reset_library();
+}
+}
+
+class Library_Test : public ::testing::Test
+{
+    protected:
+        void SetUp() override
+        {
+            library = std::make_unique<decltype (library)::element_type>();
+            async::details::set_library(library.get());
+        }
+        void TearDown() override
+        {
+            async::details::reset_library();
+            library.reset();
+        }
+
+        async::details::AsyncLibraryUPtr library;
+};
+
+TEST(Library, SetLibrary)
+{
+    EXPECT_EQ(&(async::details::Async::instance()), async::details::g_library);
+    std::cout << "instance: " << (void*)(&(async::details::Async::instance())) << "\n";
+    std::cout << "global: " << (void*)(async::details::g_library) << "\n";
+
+    async::details::AsyncLibrary l;
+    std::cout << "local: " << (void*)(&l) << "\n";
+
+    async::details::set_library(&l);
+    std::cout << "global: " << (void*)(async::details::g_library) << "\n";
+
+    EXPECT_EQ(&l, async::details::g_library);
+}
+
+TEST_F(Library_Test, FailConnect)
+{
+    async::handle_t h = async::connect(0);
+    EXPECT_EQ(0, h);
+    std::cout << library->n_procs() << "\n";
+}
+
+TEST_F(Library_Test, SuccessConnect)
+{
+    std::cout << "on enter: " << library->n_procs() << "\n";
+    async::handle_t h = async::connect(3);
+    EXPECT_EQ(reinterpret_cast<async::handle_t>(1), h);
+    std::cout << library->n_procs() << "\n";
+    async::disconnect(h);
+    std::cout << library->n_procs() << "\n";
+    h = async::connect(3);
+    EXPECT_EQ(reinterpret_cast<async::handle_t>(2), h);
+    async::disconnect(h);
+    std::cout << "on exit: " << library->n_procs() << "\n";
+}
+
+TEST_F(Library_Test, SendData)
+{
+    async::handle_t h1 = async::connect(3);
+    EXPECT_EQ(reinterpret_cast<async::handle_t>(1), h1);
+    async::receive(h1, "1", 1);
+    async::receive(h1, "\n", 1);
+    async::receive(h1, "2", 1);
+    async::receive(h1, "\n", 1);
+    async::receive(h1, "3", 1);
+    async::receive(h1, "\n", 1);
+
+    async::handle_t h2 = async::connect(3);
+    EXPECT_EQ(reinterpret_cast<async::handle_t>(2), h2);
+    async::receive(h2, "1", 1);
+    async::receive(h2, "{\n", 2);
+    async::receive(h2, "2", 1);
+    async::receive(h2, "}\n", 2);
+    async::receive(h2, "3", 1);
+    async::receive(h2, "\n", 1);
+
+    EXPECT_EQ(3, library->n_procs());
+
+    async::disconnect(h1);
+    async::disconnect(h2);
 }
