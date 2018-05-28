@@ -12,27 +12,18 @@ matrix:
 language: cpp
 before_script:
 - eval "${MATRIX_EVAL}"
-- sudo apt-get install doxygen -y
-- sudo apt-get install graphviz -y
 - echo "deb http://archive.ubuntu.com/ubuntu xenial main universe" | sudo tee -a /etc/apt/sources.list
 - sudo apt-get update -qq
 - sudo apt-get install libasio-dev -y
 script:
 - cmake .
-- cmake --build . -- VERBOSE=1
+- cmake --build . --
 - cmake --build . --target test
 - cmake --build . --target package
-- cmake --build . --target doc_doxygen
 deploy:
 - provider: script
   skip_cleanup: true
   on:
     branch: $TRAVIS_BRANCH
   script:
-  - curl -T bulk_server-$TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER-Linux.deb -uandreyc2018:$BINTRAY_API_KEY "https://api.bintray.com/content/andreyc2018/otus-cpp/bulk_server/$TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER/bulk_server-$TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER-Linux.deb;deb_distribution=trusty;deb_component=main;deb_architecture=amd64;publish=1"
-#- provider: pages
-#  skip_cleanup: true
-#  github_token: $GITHUB_DOCS_KEY
-#  local_dir: docs
-#  on:
-#    branch: $TRAVIS_BRANCH
+  - curl -T bulk_server-12.0.$TRAVIS_BUILD_NUMBER-Linux.deb -uandreyc2018:$BINTRAY_API_KEY "https://api.bintray.com/content/andreyc2018/otus-cpp/bulk_server/12.0.$TRAVIS_BUILD_NUMBER/bulk_server-12.0.$TRAVIS_BUILD_NUMBER-Linux.deb;deb_distribution=trusty;deb_component=main;deb_architecture=amd64;publish=1"

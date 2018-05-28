@@ -49,7 +49,7 @@ set(HEADER_FILES
         include/writers.h
         include/xray.h)
 
-add_library(server SHARED
+    add_library(server STATIC
         src/async.cpp
         src/async_internal.cpp
         src/interpreter.cpp
@@ -63,7 +63,6 @@ add_library(server SHARED
 add_executable(bulk_server
     src/main.cpp
     include/async.h
-    docs/hw_assignment.md
     ${CMAKE_CURRENT_BINARY_DIR}/version.h)
 
 add_executable(test_version src/test_async.cpp)
