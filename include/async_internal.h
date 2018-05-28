@@ -28,13 +28,15 @@ class AsyncLibrary
 
         handle_t open_processor(size_t bulk);
         void process_input(handle_t id,
-                           const std::string& data);
+                           const std::string& input);
         void close_processor(handle_t id);
 
         MessageQueue& console_q() { return console_q_; }
         MessageQueue& file_q() { return file_q_; }
 
         void set_bulk(std::size_t bulk);
+
+        size_t n_procs() const { return preprocessor_.n_procs(); }
 
     private:
         static std::atomic<handle_t> next_id_;
@@ -51,5 +53,6 @@ class AsyncLibrary
         void report(std::ostream& out) const;
 };
 
+using AsyncLibraryUPtr = std::unique_ptr<AsyncLibrary>;
 using Async = Singleton<AsyncLibrary>;
 }}

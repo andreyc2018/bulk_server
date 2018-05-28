@@ -26,6 +26,7 @@ class ParserState
         const std::string& name() const { return name_; }
         virtual Result handle(Parser& ctx, const std::string& input) = 0;
         virtual Result end_of_stream(Parser&) { return Result::Stop; };
+        virtual bool is_dynamic_block() const { return false; }
 
     protected:
         const std::string name_;
@@ -47,6 +48,7 @@ class ExpectingDynamicCommand : public ParserState
         ExpectingDynamicCommand() : ParserState(__func__) {}
 
         Result handle(Parser& ctx, const std::string& input) override;
+        bool is_dynamic_block() const override { return true; }
 };
 
 class ExpectingStaticCommand : public ParserState
@@ -63,6 +65,7 @@ class CollectingDynamicBlock : public ParserState
         CollectingDynamicBlock() : ParserState(__func__) {}
 
         Result handle(Parser& ctx, const std::string& input) override;
+        bool is_dynamic_block() const override { return true; }
 };
 
 class CollectingStaticBlock : public ParserState

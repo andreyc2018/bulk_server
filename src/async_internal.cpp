@@ -14,6 +14,7 @@ AsyncLibrary::AsyncLibrary()
     , file_2_(file_q_, 2)
     , bulk_(0)
 {
+    next_id_.store(reinterpret_cast<handle_t>(1), std::memory_order_relaxed);
     console_.run();
     file_1_.run();
     file_2_.run();
@@ -43,6 +44,7 @@ handle_t AsyncLibrary::open_processor(size_t bulk)
     if (bulk_ == 0) {
         preprocessor_.open_processor(CommonProcessor, bulk,
                                      console_q_, file_q_);
+        bulk_ = bulk;
         ++async_counters_.procesors;
     }
     handle_t id = next_id_.fetch_add(1, std::memory_order_relaxed);
@@ -51,10 +53,9 @@ handle_t AsyncLibrary::open_processor(size_t bulk)
     return id;
 }
 
-void AsyncLibrary::process_input(handle_t id, const std::string& data)
+void AsyncLibrary::process_input(handle_t id, const std::string& input)
 {
-    std::cout << "lib: " << (void*)this << "\n";
-    preprocessor_.parse_input(id, data);
+    preprocessor_.parse_input(id, input);
 }
 
 void AsyncLibrary::close_processor(handle_t id)
@@ -69,7 +70,7 @@ void AsyncLibrary::set_bulk(std::size_t bulk)
 
 void AsyncLibrary::report(std::ostream& out) const
 {
-    //    out << "processors - " << async_counters_.procesors << "\n";
+    out << "processors - " << async_counters_.procesors << "\n";
     out << "main поток - "
         << counters_.lines << " строк, "
         << counters_.commands << " команд, "

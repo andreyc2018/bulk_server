@@ -57,3 +57,8 @@ void Parser::notify_run()
 {
     processor_.run();
 }
+
+bool Parser::is_dynamic_block() const
+{
+    return state_->is_dynamic_block();
+}

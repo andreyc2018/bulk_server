@@ -23,20 +23,25 @@ Processor::~Processor()
     destroy_writers();
 }
 
-void Processor::add_string(const std::string& input)
+void Processor::add_character(char c)
 {
-    for (auto& i : input) {
-        if (collect_token(token_, i)) {
-            add_token(token_);
-            token_.clear();
-        }
+    if (collect_token(token_, c)) {
+        add_token(token_);
+        token_.clear();
     }
 }
 
-void Processor::add_token(const std::string& input)
+void Processor::add_string(const std::string& input)
+{
+    for (auto& c : input) {
+        add_character(c);
+    }
+}
+
+void Processor::add_token(const std::string& token)
 {
     ++counters_.lines;
-    parser_.handle_token(input);
+    parser_.handle_token(token);
 }
 
 void Processor::end_of_stream()
@@ -89,6 +94,11 @@ void Processor::start_block()
 
     writers_.push_back(std::make_unique<Reporter>(file_writer));
     writers_.push_back(std::make_unique<Reporter>(console_writer));
+}
+
+bool Processor::is_dynamic_block() const
+{
+    return parser_.is_dynamic_block();
 }
 
 void Processor::report(std::ostream& out) const

@@ -29,6 +29,7 @@ class Parser
         int dynamic_level() const { return dynamic_level_; }
         void start_block();
         void notify_run();
+        bool is_dynamic_block() const;
 
     private:
         int dynamic_level_;

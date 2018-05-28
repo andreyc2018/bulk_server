@@ -3,7 +3,6 @@
 #include "async.h"
 #include "processor.h"
 #include <set>
-#include <regex>
 #include <string>
 #include <iostream>
 
@@ -26,11 +25,12 @@ class Preprocessor
 
         virtual void parse_input(async::handle_t id,
                                  const std::string& data);
+
+        size_t n_procs() const { return processors_.size(); }
+
     private:
         async::details::AsyncLibrary& library_;
         processors_t processors_;
-
-        std::regex eol_re;
 
         void parse_block(async::handle_t id,
                          std::sregex_token_iterator& it);
