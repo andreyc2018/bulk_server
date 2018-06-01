@@ -22,6 +22,7 @@ class Preprocessor
         void open_processor(async::handle_t id, size_t bulk,
                             MessageQueue& console_q, MessageQueue& file_q);
         void close_processor(async::handle_t id, Counters& counters);
+        void timeout(async::handle_t id);
 
         virtual void parse_input(async::handle_t id,
                                  const std::string& data);
@@ -34,4 +35,5 @@ class Preprocessor
 
         void parse_block(async::handle_t id,
                          std::sregex_token_iterator& it);
+        void end_of_stream(async::handle_t id, Counters& counters);
 };

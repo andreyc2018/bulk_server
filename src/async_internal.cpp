@@ -63,6 +63,11 @@ void AsyncLibrary::close_processor(handle_t id)
     preprocessor_.close_processor(id, counters_);
 }
 
+void AsyncLibrary::timeout(handle_t id)
+{
+    preprocessor_.timeout(id);
+}
+
 void AsyncLibrary::set_bulk(std::size_t bulk)
 {
     bulk_ = bulk;

@@ -51,4 +51,10 @@ void disconnect(handle_t handle)
     details::g_library->close_processor(handle);
 }
 
+void timeout()
+{
+    std::lock_guard<std::mutex> g(mutex);
+    details::g_library->timeout(async::details::CommonProcessor);
+}
+
 }

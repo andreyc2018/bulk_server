@@ -8,6 +8,14 @@
 
 using asio::ip::tcp;
 
+//void timeout(const std::error_code& ec)
+//{
+//    std::cout << "timeout: " << ec.value()
+//              << " " << ec.message() << std::endl;
+//    if (ec.value() == 0)
+//        async::timeout();
+//}
+
 /**
  * @brief Process the data
  */
@@ -15,9 +23,11 @@ class session
     : public std::enable_shared_from_this<session>
 {
     public:
-        session(tcp::socket socket, async::handle_t h)
+        session(tcp::socket socket, async::handle_t h,
+                asio::deadline_timer& timer)
             : socket_(std::move(socket))
             , h_(h)
+            , inactivity_timer_(timer)
         {
         }
 
@@ -40,11 +50,18 @@ class session
                                     [this, self](std::error_code ec, std::size_t length)
             {
                 if (!ec) {
+                    inactivity_timer_.cancel();
 //                    std::cout << std::this_thread::get_id()
 //                              << " " << (void*)this
 //                              << " " << length << "\n";
                     async::receive(h_, data_, length);
                     do_read();
+                    inactivity_timer_.expires_from_now(boost::posix_time::milliseconds(500));
+                    inactivity_timer_.async_wait([](const std::error_code& ec)
+                    {
+                        if (!ec)
+                            async::timeout();
+                    });
                 }
             });
         }
@@ -63,6 +80,7 @@ class session
 
         tcp::socket socket_;
         async::handle_t h_;
+        asio::deadline_timer& inactivity_timer_;
 
         enum { max_length = 1024 };
 
@@ -79,6 +97,7 @@ class server
             : acceptor_(io_service, tcp::endpoint(tcp::v4(), port))
             , socket_(io_service)
             , bulk_(bulk)
+            , inactivity_timer_(io_service)
         {
             do_accept();
         }
@@ -91,7 +110,7 @@ class server
             {
                 if (!ec) {
                     async::handle_t h = async::connect(bulk_);
-                    std::make_shared<session>(std::move(socket_), h)->start();
+                    std::make_shared<session>(std::move(socket_), h, inactivity_timer_)->start();
                 }
 
                 do_accept();
@@ -101,6 +120,7 @@ class server
         tcp::acceptor acceptor_;
         tcp::socket socket_;
         size_t bulk_;
+        asio::deadline_timer inactivity_timer_;
 };
 
 /**
@@ -156,4 +176,3 @@ int main(int argc, char const** argv)
     }
     return 0;
 }
-

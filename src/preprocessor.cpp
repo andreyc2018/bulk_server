@@ -16,12 +16,27 @@ void Preprocessor::open_processor(async::handle_t id, size_t bulk,
 
 void Preprocessor::close_processor(async::handle_t id, Counters& counters)
 {
+    end_of_stream(id, counters);
+}
+
+void Preprocessor::end_of_stream(async::handle_t id, Counters& counters)
+{
     auto it = processors_.find(id);
     if (it != processors_.end()) {
         if (processors_[id]) {
             processors_[id]->end_of_stream();
             processors_[id]->report(counters);
             it = processors_.erase(it);
+        }
+    }
+}
+
+void Preprocessor::timeout(async::handle_t id)
+{
+    auto it = processors_.find(id);
+    if (it != processors_.end()) {
+        if (processors_[id]) {
+            processors_[id]->end_of_stream();
         }
     }
 }

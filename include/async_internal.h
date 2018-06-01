@@ -30,6 +30,7 @@ class AsyncLibrary
         void process_input(handle_t id,
                            const std::string& input);
         void close_processor(handle_t id);
+        void timeout(handle_t id);
 
         MessageQueue& console_q() { return console_q_; }
         MessageQueue& file_q() { return file_q_; }
