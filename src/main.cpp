@@ -8,14 +8,6 @@
 
 using asio::ip::tcp;
 
-//void timeout(const std::error_code& ec)
-//{
-//    std::cout << "timeout: " << ec.value()
-//              << " " << ec.message() << std::endl;
-//    if (ec.value() == 0)
-//        async::timeout();
-//}
-
 /**
  * @brief Process the data
  */
@@ -31,16 +23,8 @@ class session
         {
         }
 
-        ~session()
-        {
-//            std::cout << "eos\n";
-            async::disconnect(h_);
-        }
-
-        void start()
-        {
-            do_read();
-        }
+        ~session() { async::disconnect(h_); }
+        void start() { do_read(); }
 
     private:
         void do_read()
@@ -51,9 +35,6 @@ class session
             {
                 if (!ec) {
                     inactivity_timer_.cancel();
-//                    std::cout << std::this_thread::get_id()
-//                              << " " << (void*)this
-//                              << " " << length << "\n";
                     async::receive(h_, data_, length);
                     do_read();
                     inactivity_timer_.expires_from_now(boost::posix_time::milliseconds(500));
@@ -65,18 +46,6 @@ class session
                 }
             });
         }
-
-//        void do_write(std::size_t length)
-//        {
-//            auto self(shared_from_this());
-//            asio::async_write(socket_, asio::buffer(data_, length),
-//                                     [this, self](std::error_code ec, std::size_t /*length*/)
-//            {
-//                if (!ec) {
-//                    do_read();
-//                }
-//            });
-//        }
 
         tcp::socket socket_;
         async::handle_t h_;
